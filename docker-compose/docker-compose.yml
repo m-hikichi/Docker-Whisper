@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  whisper:
+    build:
+      context: ../Dockerfile
+      dockerfile: Dockerfile
+
+    image: whisper:20230314
+    container_name: whisper
+
+    volumes:
+      - ../voice_recordings:/app/voice_recordings
+
+    tty: true
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
