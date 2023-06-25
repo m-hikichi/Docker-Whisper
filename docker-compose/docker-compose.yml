@@ -1,19 +1,19 @@
 version: '3'
 
 services:
-  whisper:
+  whisper_server:
     build:
       context: ../Dockerfile
       dockerfile: Dockerfile
-
     image: whisper:20230314
-    container_name: whisper
-
+    container_name: whisper_server
     volumes:
-      - ../voice_recordings:/app/voice_recordings
-
+      - ../src_server:/app/src
+    working_dir: /app
+    ports:
+      - "7870:5000"
     tty: true
-
+    entrypoint: sh -c "python src/main.py"
     deploy:
       resources:
         reservations:
@@ -21,3 +21,12 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+
+  whisper_client:
+    image: python:3.10
+    container_name: whisper_client
+    volumes:
+      - ../src_client:/app/src
+      - ../voice_recordings:/app/voice_recordings
+    working_dir: /app
+    tty: true
