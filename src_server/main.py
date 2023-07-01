@@ -2,6 +2,7 @@ from flask import Flask, abort, request
 import whisper
 import tempfile
 from pathlib import Path
+import base64
 
 
 app = Flask(__name__)
@@ -27,34 +28,23 @@ def whisper_handler():
         abort(400)
 
     # temporary storage of received audio file
-    audio_file = request.files["audio_file"]
+    b64_audio = request.files["b64_audio"]
+    audio = base64.b64decode(b64_audio.read())
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
         temp_filepath = Path(temp_file.name)
-        audio_file.save(temp_filepath)
+    with open(str(temp_filepath), "wb") as f:
+        f.write(audio)
 
     # load whisper-model
     model = whisper.load_model("small")
 
-    # load audio and pad/trim it to fit 30 seconds
-    audio = whisper.load_audio(temp_filepath)
-    audio = whisper.pad_or_trim(audio)
+    # transcribe speech in audio file
+    result = model.transcribe(str(temp_filepath))
 
     # delete temporary file
     temp_filepath.unlink()
 
-    # make log-Mel spectrogram and move to the same devices as the model
-    mel = whisper.log_mel_spectrogram(audio).to(model.device)
-
-    # detect the spoken language
-    _, probs = model.detect_language(mel)
-    detected_language = max(probs, key=probs.get)
-    print(f"Detected language: {detected_language}")
-
-    # decode the audio
-    options = whisper.DecodingOptions()
-    result = whisper.decode(model, mel, options)
-
-    return result.text
+    return result["text"]
 
 
 if __name__=="__main__":
