@@ -13,8 +13,9 @@ app = FastAPI(
 )
 
 
-class RequestAudioModel(BaseModel):
+class WhisperRequestModel(BaseModel):
     b64_audio: str
+    model_name: str = "small"
 
 
 class TranscribeTextModel(BaseModel):
@@ -37,13 +38,13 @@ def index():
     response_model=TranscribeTextModel,
     description="base64形式の音声ファイルを受け取り, 文字起こしした文章を返す"
 )
-def whisper_handler(request_audio: RequestAudioModel):
-    if not request_audio.b64_audio:
+def whisper_handler(request: WhisperRequestModel):
+    if not request.b64_audio:
         # return HTTP Exception 400 if b64_audio is blank
         raise HTTPException(status_code=400, detail="audio file is None")
 
     # temporary storage of received audio file
-    b64_audio = request_audio.b64_audio
+    b64_audio = request.b64_audio
     audio = base64.b64decode(b64_audio)
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
         temp_filepath = Path(temp_file.name)
@@ -51,7 +52,10 @@ def whisper_handler(request_audio: RequestAudioModel):
         f.write(audio)
 
     # load whisper-model
-    model = whisper.load_model("small")
+    try:
+        model = whisper.load_model(request.model_name)
+    except RuntimeError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     # transcribe speech in audio file
     result = model.transcribe(str(temp_filepath))

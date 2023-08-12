@@ -11,3 +11,11 @@ if __name__=="__main__":
     data = {"b64_audio": b64_audio}
     response = requests.post(url, json=data)
     print(response.text)
+
+    data = {"b64_audio": b64_audio, "model_name": "medium"}
+    response = requests.post(url, json=data)
+    print(response.text)
+
+    data = {"b64_audio": b64_audio, "model_name": "test"}
+    response = requests.post(url, json=data)
+    print(response.text)
