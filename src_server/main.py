@@ -14,7 +14,7 @@ app = FastAPI(
 
 
 class WhisperRequestModel(BaseModel):
-    b64_audio: str
+    b64_audio: str = ""
     model_name: str = "small"
 
 
@@ -41,11 +41,15 @@ def index():
 def whisper_handler(request: WhisperRequestModel):
     if not request.b64_audio:
         # return HTTP Exception 400 if b64_audio is blank
-        raise HTTPException(status_code=400, detail="audio file is None")
+        raise HTTPException(status_code=400, detail="b64_audio is Empty")
 
+    # decode received audio file
+    try:
+        b64_audio = request.b64_audio
+        audio = base64.b64decode(b64_audio)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
     # temporary storage of received audio file
-    b64_audio = request.b64_audio
-    audio = base64.b64decode(b64_audio)
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
         temp_filepath = Path(temp_file.name)
     with open(str(temp_filepath), "wb") as f:
