@@ -26,7 +26,7 @@ class TranscribeTextModel(BaseModel):
     "/",
     description="ホームページの表示"
 )
-def index():
+async def index():
     display_text = """
     <h1>Welcome to the Whisper API!</h1>
     """
@@ -38,7 +38,7 @@ def index():
     response_model=TranscribeTextModel,
     description="base64形式の音声ファイルを受け取り, 文字起こしした文章を返す"
 )
-def whisper_handler(request: WhisperRequestModel):
+async def whisper_handler(request: WhisperRequestModel):
     if not request.b64_audio:
         # return HTTP Exception 400 if b64_audio is blank
         raise HTTPException(status_code=400, detail="b64_audio is Empty")
@@ -58,14 +58,13 @@ def whisper_handler(request: WhisperRequestModel):
     # load whisper-model
     try:
         model = whisper.load_model(request.model_name)
+        # transcribe speech in audio file
+        result = model.transcribe(str(temp_filepath))
     except RuntimeError as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-    # transcribe speech in audio file
-    result = model.transcribe(str(temp_filepath))
-
-    # delete temporary file
-    temp_filepath.unlink()
+    finally:
+        # delete temporary file
+        temp_filepath.unlink()
 
     # return JSONResponse(content={"transcribe_text": result["text"]})
     return TranscribeTextModel(transcribe_text=result["text"])
