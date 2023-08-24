@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, File, UploadFile
 from fastapi.responses import HTMLResponse
 from pydantic import  BaseModel
 import whisper
@@ -34,13 +34,39 @@ async def index():
 
 
 @app.post(
-    "/whisper",
+    "/transcribe_file",
+    response_model=TranscribeTextModel,
+    description="音声ファイルを受け取り, 文字起こしした文章を返す"
+)
+async def transcribe_file(file: UploadFile = File(...)):
+    # temporary storage of received audio file
+    contents = await file.read()
+    with tempfile.NamedTemporaryFile(suffix=Path(file.filename).suffix, delete=False) as temp_file:
+        temp_filepath = Path(temp_file.name)
+    temp_filepath.write_bytes(contents)
+
+    # transcribe
+    try:
+        model = whisper.load_model("small")
+        result = model.transcribe(str(temp_filepath))
+    except RuntimeError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        # delete temporary file
+        temp_filepath.unlink()
+
+    # response
+    return TranscribeTextModel(transcribe_text=result["text"])
+
+
+@app.post(
+    "/transcribe_base64",
     response_model=TranscribeTextModel,
     description="base64形式の音声ファイルを受け取り, 文字起こしした文章を返す"
 )
-async def whisper_handler(request: WhisperRequestModel):
+async def transcribe_base64(request: WhisperRequestModel):
+    # return HTTP Exception 400 if b64_audio is blank
     if not request.b64_audio:
-        # return HTTP Exception 400 if b64_audio is blank
         raise HTTPException(status_code=400, detail="b64_audio is Empty")
 
     # decode received audio file
@@ -55,10 +81,9 @@ async def whisper_handler(request: WhisperRequestModel):
     with open(str(temp_filepath), "wb") as f:
         f.write(audio)
 
-    # load whisper-model
+    # transcribe
     try:
         model = whisper.load_model(request.model_name)
-        # transcribe speech in audio file
         result = model.transcribe(str(temp_filepath))
     except RuntimeError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -66,5 +91,5 @@ async def whisper_handler(request: WhisperRequestModel):
         # delete temporary file
         temp_filepath.unlink()
 
-    # return JSONResponse(content={"transcribe_text": result["text"]})
+    # response
     return TranscribeTextModel(transcribe_text=result["text"])
