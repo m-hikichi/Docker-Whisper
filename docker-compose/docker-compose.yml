@@ -41,6 +41,6 @@ services:
     container_name: whisper_client
     volumes:
       - ../src_client:/app/src
-      - ../voice_recordings:/app/voice_recordings
+      - ../pytest.ini:/app/pytest.ini
     working_dir: /app
     tty: true

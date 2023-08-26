@@ -86,9 +86,9 @@ async def transcribe_base64(request: WhisperRequestModel):
 
     # transcribe
     try:
-        model = model = faster_whisper.WhisperModel("small", device="cpu", compute_type="int16")
+        model = model = faster_whisper.WhisperModel(request.model_name, device="cpu", compute_type="int16")
         segments, info = model.transcribe(str(temp_filepath), beam_size=5)
-    except RuntimeError as e:
+    except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     finally:
         # delete temporary file
