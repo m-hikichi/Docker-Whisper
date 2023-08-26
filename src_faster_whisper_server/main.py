@@ -1,14 +1,14 @@
 from fastapi import FastAPI, HTTPException, File, UploadFile
 from fastapi.responses import HTMLResponse
 from pydantic import  BaseModel
-import whisper
+import faster_whisper
 import tempfile
 from pathlib import Path
 import base64
 
 
 app = FastAPI(
-    title="whisper API",
+    title="faster whisper API",
     description="",
 )
 
@@ -28,7 +28,7 @@ class TranscribeTextModel(BaseModel):
 )
 async def index():
     display_text = """
-    <h1>Welcome to the Whisper API!</h1>
+    <h1>Welcome to the faster whisper API!</h1>
     """
     return HTMLResponse(content=display_text)
 
@@ -47,8 +47,8 @@ async def transcribe_file(file: UploadFile = File(...)):
 
     # transcribe
     try:
-        model = whisper.load_model("small")
-        result = model.transcribe(str(temp_filepath))
+        model = model = faster_whisper.WhisperModel("small", device="cpu", compute_type="int16")
+        segments, info = model.transcribe(str(temp_filepath), beam_size=5)
     except RuntimeError as e:
         raise HTTPException(status_code=400, detail=str(e))
     finally:
@@ -56,7 +56,10 @@ async def transcribe_file(file: UploadFile = File(...)):
         temp_filepath.unlink()
 
     # response
-    return TranscribeTextModel(transcribe_text=result["text"])
+    transcribe_text = ""
+    for segment in segments:
+        transcribe_text += segment.text
+    return TranscribeTextModel(transcribe_text=transcribe_text)
 
 
 @app.post(
@@ -83,8 +86,8 @@ async def transcribe_base64(request: WhisperRequestModel):
 
     # transcribe
     try:
-        model = whisper.load_model(request.model_name)
-        result = model.transcribe(str(temp_filepath))
+        model = model = faster_whisper.WhisperModel("small", device="cpu", compute_type="int16")
+        segments, info = model.transcribe(str(temp_filepath), beam_size=5)
     except RuntimeError as e:
         raise HTTPException(status_code=400, detail=str(e))
     finally:
@@ -92,4 +95,7 @@ async def transcribe_base64(request: WhisperRequestModel):
         temp_filepath.unlink()
 
     # response
-    return TranscribeTextModel(transcribe_text=result["text"])
+    transcribe_text = ""
+    for segment in segments:
+        transcribe_text += segment.text
+    return TranscribeTextModel(transcribe_text=transcribe_text)

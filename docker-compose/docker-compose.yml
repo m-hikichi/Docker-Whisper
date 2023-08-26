@@ -1,17 +1,31 @@
 version: '3'
 
 services:
-  whisper_server:
+  openai_whisper_server:
     build:
-      context: ../Dockerfile
+      context: ../Dockerfile_openai_whisper
       dockerfile: Dockerfile
-    image: whisper:20230314
-    container_name: whisper_server
+    image: openai_whisper:20230314
+    container_name: openai_whisper_server
     volumes:
-      - ../src_server:/app/src
+      - ../src_openai_whisper_server:/app/src
     working_dir: /app
     ports:
       - "7870:5000"
+    tty: true
+    entrypoint: sh -c "cd /app/src && uvicorn main:app --host 0.0.0.0 --reload --port 5000"
+
+  faster_whisper_server:
+    build:
+      context: ../Dockerfile_faster_whisper
+      dockerfile: Dockerfile
+    image: faster_whisper:0.7.1
+    container_name: faster_whisper_server
+    volumes:
+      - ../src_faster_whisper_server:/app/src
+    working_dir: /app
+    ports:
+      - "7871:5000"
     tty: true
     entrypoint: sh -c "cd /app/src && uvicorn main:app --host 0.0.0.0 --reload --port 5000"
     deploy:
