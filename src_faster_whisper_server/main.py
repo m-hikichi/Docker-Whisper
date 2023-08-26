@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, File, UploadFile
 from fastapi.responses import HTMLResponse
 from pydantic import  BaseModel
 import faster_whisper
+import torch
 import tempfile
 from pathlib import Path
 import base64
@@ -47,8 +48,7 @@ async def transcribe_file(file: UploadFile = File(...)):
 
     # transcribe
     try:
-        model = model = faster_whisper.WhisperModel("small", device="cpu", compute_type="int16")
-        segments, info = model.transcribe(str(temp_filepath), beam_size=5)
+        segments = transcribe(request.model_name, temp_filepath)
     except RuntimeError as e:
         raise HTTPException(status_code=400, detail=str(e))
     finally:
@@ -86,8 +86,7 @@ async def transcribe_base64(request: WhisperRequestModel):
 
     # transcribe
     try:
-        model = model = faster_whisper.WhisperModel(request.model_name, device="cpu", compute_type="int16")
-        segments, info = model.transcribe(str(temp_filepath), beam_size=5)
+        segments = transcribe(request.model_name, temp_filepath)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     finally:
@@ -99,3 +98,20 @@ async def transcribe_base64(request: WhisperRequestModel):
     for segment in segments:
         transcribe_text += segment.text
     return TranscribeTextModel(transcribe_text=transcribe_text)
+
+
+def transcribe(model_name, audio_filepath):
+    try:
+        if torch.cuda.is_available():
+            model = faster_whisper.WhisperModel(model_name, device="cuda", compute_type="float16")
+        else:
+            model = faster_whisper.WhisperModel(model_name, device="cpu", compute_type="int16")
+    except ValueError as e:
+        raise e
+    except RuntimeError as e:
+        # CUDA out of memory
+        model = faster_whisper.WhisperModel(model_name, device="cpu", compute_type="int16")
+
+    segments, info = model.transcribe(str(audio_filepath), beam_size=5)
+
+    return segments
