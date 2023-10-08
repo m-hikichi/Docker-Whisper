@@ -58,7 +58,8 @@ async def transcribe_file(file: UploadFile = File(...), model_name: ModelName = 
 
     # transcribe
     try:
-        segments = transcribe(model_name.value, temp_filepath)
+        model = load_model(model_name.value)
+        segments, info = model.transcribe(str(temp_filepath), beam_size=5)
     except RuntimeError as e:
         raise HTTPException(status_code=400, detail=str(e))
     finally:
@@ -96,7 +97,8 @@ async def transcribe_base64(request: WhisperRequestModel):
 
     # transcribe
     try:
-        segments = transcribe(request.model_name, temp_filepath)
+        model = load_model(request.model_name)
+        segments, info = model.transcribe(str(temp_filepath), beam_size=5)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     finally:
@@ -110,7 +112,7 @@ async def transcribe_base64(request: WhisperRequestModel):
     return TranscribeTextModel(transcribe_text=transcribe_text)
 
 
-def transcribe(model_name, audio_filepath):
+def load_model(model_name):
     try:
         if torch.cuda.is_available():
             model = faster_whisper.WhisperModel(model_name, device="cuda", compute_type="float16")
@@ -122,6 +124,4 @@ def transcribe(model_name, audio_filepath):
         # CUDA out of memory
         model = faster_whisper.WhisperModel(model_name, device="cpu", compute_type="int16")
 
-    segments, info = model.transcribe(str(audio_filepath), beam_size=5)
-
-    return segments
+    return model
