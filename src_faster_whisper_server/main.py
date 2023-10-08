@@ -1,6 +1,7 @@
-from fastapi import FastAPI, HTTPException, File, UploadFile
+from fastapi import FastAPI, HTTPException, File, UploadFile, Form
 from fastapi.responses import HTMLResponse
 from pydantic import  BaseModel
+from enum import Enum
 import faster_whisper
 import torch
 import tempfile
@@ -23,6 +24,15 @@ class TranscribeTextModel(BaseModel):
     transcribe_text: str
 
 
+class ModelName(Enum):
+    largeV2 = "large-v2"
+    largeV1 = "large-v1"
+    medium = "medium"
+    small = "small"
+    base = "base"
+    tiny = "tiny"
+
+
 @app.get(
     "/",
     description="ホームページの表示"
@@ -39,7 +49,7 @@ async def index():
     response_model=TranscribeTextModel,
     description="音声ファイルを受け取り, 文字起こしした文章を返す"
 )
-async def transcribe_file(file: UploadFile = File(...)):
+async def transcribe_file(file: UploadFile = File(...), model_name: ModelName = Form(...)):
     # temporary storage of received audio file
     contents = await file.read()
     with tempfile.NamedTemporaryFile(suffix=Path(file.filename).suffix, delete=False) as temp_file:
@@ -48,7 +58,7 @@ async def transcribe_file(file: UploadFile = File(...)):
 
     # transcribe
     try:
-        segments = transcribe(request.model_name, temp_filepath)
+        segments = transcribe(model_name.value, temp_filepath)
     except RuntimeError as e:
         raise HTTPException(status_code=400, detail=str(e))
     finally:
