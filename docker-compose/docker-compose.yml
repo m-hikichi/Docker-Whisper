@@ -19,7 +19,7 @@ services:
     build:
       context: ../Dockerfile_faster_whisper
       dockerfile: Dockerfile
-    image: faster_whisper:0.7.1
+    image: faster_whisper:0.9.0
     container_name: faster_whisper_server
     volumes:
       - ../src_faster_whisper_server:/app/src

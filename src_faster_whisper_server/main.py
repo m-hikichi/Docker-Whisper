@@ -117,11 +117,11 @@ def load_model(model_name):
         if torch.cuda.is_available():
             model = faster_whisper.WhisperModel(model_name, device="cuda", compute_type="float16")
         else:
-            model = faster_whisper.WhisperModel(model_name, device="cpu", compute_type="int16")
+            model = faster_whisper.WhisperModel(model_name, device="cpu", compute_type="int8")
     except ValueError as e:
         raise e
     except RuntimeError as e:
         # CUDA out of memory
-        model = faster_whisper.WhisperModel(model_name, device="cpu", compute_type="int16")
+        model = faster_whisper.WhisperModel(model_name, device="cpu", compute_type="int8")
 
     return model
