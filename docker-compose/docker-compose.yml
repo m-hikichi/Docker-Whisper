@@ -23,6 +23,7 @@ services:
     container_name: faster_whisper_server
     volumes:
       - ../src_faster_whisper_server:/app/src
+      - ../logging.conf:/app/logging.conf
     working_dir: /app
     ports:
       - "7871:5000"

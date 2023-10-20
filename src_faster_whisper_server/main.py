@@ -7,6 +7,11 @@ import torch
 import tempfile
 from pathlib import Path
 import base64
+import logging.config
+
+
+logging.config.fileConfig("/app/logging.conf")
+logger = logging.getLogger("faster_whisper")
 
 
 app = FastAPI(
@@ -50,6 +55,8 @@ async def index():
     description="音声ファイルを受け取り, 文字起こしした文章を返す"
 )
 async def transcribe_file(file: UploadFile = File(...), model_name: ModelName = Form(...)):
+    logger.info("/transcribe_file accessed")
+    
     # temporary storage of received audio file
     contents = await file.read()
     with tempfile.NamedTemporaryFile(suffix=Path(file.filename).suffix, delete=False) as temp_file:
@@ -79,6 +86,8 @@ async def transcribe_file(file: UploadFile = File(...), model_name: ModelName = 
     description="base64形式の音声ファイルを受け取り, 文字起こしした文章を返す"
 )
 async def transcribe_base64(request: WhisperRequestModel):
+    logger.info("/transcribe_base64 accessed")
+
     # return HTTP Exception 400 if b64_audio is blank
     if not request.b64_audio:
         raise HTTPException(status_code=400, detail="b64_audio is Empty")
@@ -118,10 +127,10 @@ def load_model(model_name):
             model = faster_whisper.WhisperModel(model_name, device="cuda", compute_type="float16")
         else:
             model = faster_whisper.WhisperModel(model_name, device="cpu", compute_type="int8")
-    except ValueError as e:
-        raise e
     except RuntimeError as e:
         # CUDA out of memory
         model = faster_whisper.WhisperModel(model_name, device="cpu", compute_type="int8")
+    except Exception as e:
+        raise e
 
     return model
