@@ -14,8 +14,12 @@ def base64_audio():
 @pytest.mark.parametrize(
     "model_name",
     [
+        "tiny",
+        "base",
         "small",
         "medium",
+        "large-v1",
+        "large-v2",
     ]
 )
 def test_successful_request(base64_audio, model_name):

@@ -12,8 +12,12 @@ def audio():
 @pytest.mark.parametrize(
     "model_name",
     [
+        "tiny",
+        "base",
         "small",
         "medium",
+        "large-v1",
+        "large-v2",
     ]
 )
 def test_successful_request(audio, model_name):
