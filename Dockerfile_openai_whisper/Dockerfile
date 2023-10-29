@@ -1,4 +1,8 @@
-FROM python:3.10
+FROM nvidia/cuda:11.7.1-cudnn8-runtime-ubuntu20.04
+
+RUN ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+RUN apt update && apt -y upgrade
+RUN apt install -y python3-pip
 
 RUN apt-get update && apt-get install -y ffmpeg
 
@@ -8,6 +12,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # download model
+RUN apt-get install -y wget
 RUN mkdir -p /root/.cache/whisper/
 RUN wget -P /root/.cache/whisper/ https://openaipublic.azureedge.net/main/whisper/models/65147644a518d12f04e32d6f3b26facc3f8dd46e5390956a9424a650c0ce22b9/tiny.pt
 RUN wget -P /root/.cache/whisper/ https://openaipublic.azureedge.net/main/whisper/models/ed3a0b6b1c0edf879ad9b11b1af5a0e6ab5db9205f891f668f8b0e6c6326e34e/base.pt

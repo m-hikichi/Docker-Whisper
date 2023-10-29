@@ -14,6 +14,13 @@ services:
       - "7870:5000"
     tty: true
     entrypoint: sh -c "cd /app/src && uvicorn main:app --host 0.0.0.0 --reload --port 5000"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   faster_whisper_server:
     build:

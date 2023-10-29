@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse
 from pydantic import  BaseModel
 from enum import Enum
 import whisper
+import torch
 import tempfile
 from pathlib import Path
 import base64
@@ -25,7 +26,7 @@ class TranscribeTextModel(BaseModel):
 
 class ModelName(Enum):
     largeV2 = "large-v2"
-    large = "large"
+    largeV1 = "large-v1"
     medium = "medium"
     small = "small"
     base = "base"
@@ -57,7 +58,7 @@ async def transcribe_file(file: UploadFile = File(...), model_name: ModelName = 
 
     # transcribe
     try:
-        model = whisper.load_model(model_name.value)
+        model = load_model(model_name.value)
         result = model.transcribe(str(temp_filepath))
     except RuntimeError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -93,7 +94,7 @@ async def transcribe_base64(request: WhisperRequestModel):
 
     # transcribe
     try:
-        model = whisper.load_model(request.model_name)
+        model = load_model(request.model_name)
         result = model.transcribe(str(temp_filepath))
     except RuntimeError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -103,3 +104,18 @@ async def transcribe_base64(request: WhisperRequestModel):
 
     # response
     return TranscribeTextModel(transcribe_text=result["text"])
+
+
+def load_model(model_name: str):
+    try:
+        if torch.cuda.is_available():
+            model = whisper.load_model(model_name, device="cuda")
+        else:
+            model = whisper.load_model(model_name, device="cpu")
+    except torch.cuda.OutOfMemoryError as e:
+        # CUDA out of memory
+        model = whisper.load_model(model_name, device="cpu")
+    except Exception as e:
+        raise e
+
+    return model
