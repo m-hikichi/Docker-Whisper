@@ -25,6 +25,7 @@ class TranscribeTextModel(BaseModel):
 
 
 class ModelName(Enum):
+    largeV3 = "large-v3"
     largeV2 = "large-v2"
     largeV1 = "large-v1"
     medium = "medium"
