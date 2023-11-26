@@ -75,6 +75,7 @@ async def transcribe_file(file: UploadFile = File(...), model_name: ModelName = 
         temp_filepath.unlink()
 
     # response
+    logger.info("response transcribe text")
     return TranscribeTextModel(transcribe_text=result["text"])
 
 
@@ -113,6 +114,7 @@ async def transcribe_base64(request: WhisperRequestModel):
         temp_filepath.unlink()
 
     # response
+    logger.info("response transcribe text")
     return TranscribeTextModel(transcribe_text=result["text"])
 
 
@@ -128,4 +130,5 @@ def load_model(model_name: str):
     except Exception as e:
         raise e
 
+    logger.info(f"load {model_name} model")
     return model
