@@ -7,6 +7,11 @@ import torch
 import tempfile
 from pathlib import Path
 import base64
+import logging.config
+
+
+logging.config.fileConfig("/app/logging.conf")
+logger = logging.getLogger("openai_whisper")
 
 
 app = FastAPI(
@@ -51,6 +56,8 @@ async def index():
     description="音声ファイルを受け取り, 文字起こしした文章を返す"
 )
 async def transcribe_file(file: UploadFile = File(...), model_name: ModelName = Form(...)):
+    logger.info("/transcribe_file accessed")
+    
     # temporary storage of received audio file
     contents = await file.read()
     with tempfile.NamedTemporaryFile(suffix=Path(file.filename).suffix, delete=False) as temp_file:
@@ -77,6 +84,8 @@ async def transcribe_file(file: UploadFile = File(...), model_name: ModelName = 
     description="base64形式の音声ファイルを受け取り, 文字起こしした文章を返す"
 )
 async def transcribe_base64(request: WhisperRequestModel):
+    logger.info("/transcribe_base64 accessed")
+
     # return HTTP Exception 400 if b64_audio is blank
     if not request.b64_audio:
         raise HTTPException(status_code=400, detail="b64_audio is Empty")

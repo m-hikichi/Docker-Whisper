@@ -9,6 +9,7 @@ services:
     container_name: openai_whisper_server
     volumes:
       - ../src_openai_whisper_server:/app/src
+      - ../logging.conf:/app/logging.conf
     working_dir: /app
     ports:
       - "7870:5000"
