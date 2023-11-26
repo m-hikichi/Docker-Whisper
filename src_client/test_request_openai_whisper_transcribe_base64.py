@@ -20,6 +20,7 @@ def base64_audio():
         "medium",
         "large-v1",
         "large-v2",
+        "large-v3",
     ]
 )
 def test_successful_request(base64_audio, model_name):
