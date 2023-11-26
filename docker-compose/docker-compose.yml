@@ -5,7 +5,7 @@ services:
     build:
       context: ../Dockerfile_openai_whisper
       dockerfile: Dockerfile
-    image: openai_whisper:20230918
+    image: openai_whisper:20231117
     container_name: openai_whisper_server
     volumes:
       - ../src_openai_whisper_server:/app/src
