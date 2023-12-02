@@ -13,4 +13,10 @@ RUN pip install -r requirements.txt
 
 # download model
 COPY download_model.py .
-RUN python3 download_model.py
+RUN python3 download_model.py tiny
+RUN python3 download_model.py base
+RUN python3 download_model.py small
+RUN python3 download_model.py medium
+RUN python3 download_model.py large-v1
+RUN python3 download_model.py large-v2
+RUN python3 download_model.py large-v3
