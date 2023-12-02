@@ -18,6 +18,7 @@ def audio():
         "medium",
         "large-v1",
         "large-v2",
+        "large-v3",
     ]
 )
 def test_successful_request(audio, model_name):
