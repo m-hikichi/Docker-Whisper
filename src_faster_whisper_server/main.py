@@ -128,12 +128,12 @@ async def transcribe_base64(request: WhisperRequestModel):
 def load_model(model_name):
     try:
         if torch.cuda.is_available():
-            model = faster_whisper.WhisperModel(model_name, device="cuda", compute_type="float16")
+            model = faster_whisper.WhisperModel(model_name, device="cuda", compute_type="float16", local_files_only=True)
         else:
-            model = faster_whisper.WhisperModel(model_name, device="cpu", compute_type="int8")
+            model = faster_whisper.WhisperModel(model_name, device="cpu", compute_type="int8", local_files_only=True)
     except RuntimeError as e:
         # CUDA out of memory
-        model = faster_whisper.WhisperModel(model_name, device="cpu", compute_type="int8")
+        model = faster_whisper.WhisperModel(model_name, device="cpu", compute_type="int8", local_files_only=True)
     except Exception as e:
         raise e
 
