@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form
 from fastapi.responses import HTMLResponse
 from pydantic import  BaseModel
-from enum import Enum
+from enum import Enum, unique
 import faster_whisper
 import torch
 import tempfile
@@ -29,7 +29,9 @@ class TranscribeTextModel(BaseModel):
     transcribe_text: str
 
 
+@unique
 class ModelName(Enum):
+    largeV3 = "large-v3"
     largeV2 = "large-v2"
     largeV1 = "large-v1"
     medium = "medium"
@@ -77,6 +79,7 @@ async def transcribe_file(file: UploadFile = File(...), model_name: ModelName = 
     transcribe_text = ""
     for segment in segments:
         transcribe_text += segment.text
+    logger.info("response transcribe text")
     return TranscribeTextModel(transcribe_text=transcribe_text)
 
 
@@ -118,6 +121,7 @@ async def transcribe_base64(request: WhisperRequestModel):
     transcribe_text = ""
     for segment in segments:
         transcribe_text += segment.text
+    logger.info("response transcribe text")
     return TranscribeTextModel(transcribe_text=transcribe_text)
 
 
@@ -133,4 +137,5 @@ def load_model(model_name):
     except Exception as e:
         raise e
 
+    logger.info(f"load {model_name} model")
     return model
