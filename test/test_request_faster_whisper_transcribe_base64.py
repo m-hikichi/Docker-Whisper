@@ -5,7 +5,7 @@ import base64
 
 @pytest.fixture()
 def base64_audio():
-    with open("/app/src/voicevox.wav", "rb") as f:
+    with open("/app/test/voicevox.wav", "rb") as f:
         audio = f.read()
         b64_audio = base64.b64encode(audio).decode("utf-8")
     return b64_audio

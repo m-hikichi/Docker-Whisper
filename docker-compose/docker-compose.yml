@@ -45,11 +45,11 @@ services:
               count: 1
               capabilities: [gpu]
 
-  whisper_client:
+  whisper_test_client:
     image: python:3.10
-    container_name: whisper_client
+    container_name: whisper_test_client
     volumes:
-      - ../src_client:/app/src
+      - ../test:/app/test
       - ../pytest.ini:/app/pytest.ini
     working_dir: /app
     tty: true
