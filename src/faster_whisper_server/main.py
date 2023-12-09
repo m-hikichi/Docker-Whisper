@@ -1,13 +1,13 @@
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form
 from fastapi.responses import HTMLResponse
 from pydantic import  BaseModel
-from enum import Enum, unique
-import faster_whisper
-import torch
-import tempfile
+
 from pathlib import Path
 import base64
 import logging.config
+
+from utils.util import write_to_temporary_file
+from faster_whisper_server.faster_whisper_tools import ModelName, load_faster_whisper_model
 
 
 logging.config.fileConfig("/app/logging.conf")
@@ -27,17 +27,6 @@ class WhisperRequestModel(BaseModel):
 
 class TranscribeTextModel(BaseModel):
     transcribe_text: str
-
-
-@unique
-class ModelName(Enum):
-    largeV3 = "large-v3"
-    largeV2 = "large-v2"
-    largeV1 = "large-v1"
-    medium = "medium"
-    small = "small"
-    base = "base"
-    tiny = "tiny"
 
 
 @app.get(
@@ -61,13 +50,11 @@ async def transcribe_file(file: UploadFile = File(...), model_name: ModelName = 
     
     # temporary storage of received audio file
     contents = await file.read()
-    with tempfile.NamedTemporaryFile(suffix=Path(file.filename).suffix, delete=False) as temp_file:
-        temp_filepath = Path(temp_file.name)
-    temp_filepath.write_bytes(contents)
+    temp_filepath = write_to_temporary_file(contents, Path(file.filename).suffix)
 
     # transcribe
     try:
-        model = load_model(model_name.value)
+        model = load_faster_whisper_model(model_name.value)
         segments, info = model.transcribe(str(temp_filepath), beam_size=5)
     except RuntimeError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -98,18 +85,15 @@ async def transcribe_base64(request: WhisperRequestModel):
     # decode received audio file
     try:
         b64_audio = request.b64_audio
-        audio = base64.b64decode(b64_audio)
+        contents = base64.b64decode(b64_audio)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     # temporary storage of received audio file
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
-        temp_filepath = Path(temp_file.name)
-    with open(str(temp_filepath), "wb") as f:
-        f.write(audio)
+    temp_filepath = write_to_temporary_file(contents, ".wav")
 
     # transcribe
     try:
-        model = load_model(request.model_name)
+        model = load_faster_whisper_model(request.model_name)
         segments, info = model.transcribe(str(temp_filepath), beam_size=5)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -123,19 +107,3 @@ async def transcribe_base64(request: WhisperRequestModel):
         transcribe_text += segment.text
     logger.info("response transcribe text")
     return TranscribeTextModel(transcribe_text=transcribe_text)
-
-
-def load_model(model_name):
-    try:
-        if torch.cuda.is_available():
-            model = faster_whisper.WhisperModel(model_name, device="cuda", compute_type="float16", local_files_only=True)
-        else:
-            model = faster_whisper.WhisperModel(model_name, device="cpu", compute_type="int8", local_files_only=True)
-    except RuntimeError as e:
-        # CUDA out of memory
-        model = faster_whisper.WhisperModel(model_name, device="cpu", compute_type="int8", local_files_only=True)
-    except Exception as e:
-        raise e
-
-    logger.info(f"load {model_name} model")
-    return model

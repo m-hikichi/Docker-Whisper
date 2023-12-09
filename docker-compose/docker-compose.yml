@@ -30,13 +30,16 @@ services:
     image: faster_whisper:0.10.0
     container_name: faster_whisper_server
     volumes:
-      - ../src_faster_whisper_server:/app/src
+      - ../src/utils:/app/src/utils
+      - ../src/faster_whisper_server:/app/src/faster_whisper_server
       - ../logging.conf:/app/logging.conf
     working_dir: /app
     ports:
       - "7871:5000"
+    environment:
+      PYTHONPATH: /app/src/
     tty: true
-    entrypoint: sh -c "cd /app/src && uvicorn main:app --host 0.0.0.0 --reload --port 5000"
+    entrypoint: sh -c "cd /app/src/faster_whisper_server && uvicorn main:app --host 0.0.0.0 --reload --port 5000"
     deploy:
       resources:
         reservations:
