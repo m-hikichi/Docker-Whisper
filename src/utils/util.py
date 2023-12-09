@@ -4,7 +4,8 @@ import logging.config
 
 
 logging.config.fileConfig("/app/logging.conf")
-logger = logging.getLogger("faster_whisper")
+logger = logging.getLogger("utils")
+
 
 def write_to_temporary_file(contents, suffix):
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as temp_file:

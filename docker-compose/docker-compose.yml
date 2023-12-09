@@ -8,13 +8,16 @@ services:
     image: openai_whisper:20231117
     container_name: openai_whisper_server
     volumes:
-      - ../src_openai_whisper_server:/app/src
+      - ../src/utils:/app/src/utils
+      - ../src/openai_whisper_server:/app/src/openai_whisper_server
       - ../logging.conf:/app/logging.conf
     working_dir: /app
     ports:
       - "7870:5000"
+    environment:
+      PYTHONPATH: /app/src/
     tty: true
-    entrypoint: sh -c "cd /app/src && uvicorn main:app --host 0.0.0.0 --reload --port 5000"
+    entrypoint: sh -c "cd /app/src/openai_whisper_server && uvicorn main:app --host 0.0.0.0 --reload --port 5000"
     deploy:
       resources:
         reservations:
