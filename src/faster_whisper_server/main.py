@@ -1,13 +1,17 @@
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form
 from fastapi.responses import HTMLResponse
-from pydantic import  BaseModel
+from pydantic import BaseModel
 
 from pathlib import Path
 import base64
 import logging.config
 
 from utils.util import write_to_temporary_file
-from faster_whisper_server.faster_whisper_tools import ModelName, load_faster_whisper_model
+from faster_whisper_server.faster_whisper_tools import (
+    ModelName,
+    load_faster_whisper_model,
+    faster_whisper_transcribe,
+)
 
 
 logging.config.fileConfig("/app/logging.conf")
@@ -29,10 +33,7 @@ class TranscribeTextModel(BaseModel):
     transcribe_text: str
 
 
-@app.get(
-    "/",
-    description="ホームページの表示"
-)
+@app.get("/", description="ホームページの表示")
 async def index():
     display_text = """
     <h1>Welcome to the faster whisper API!</h1>
@@ -43,11 +44,13 @@ async def index():
 @app.post(
     "/transcribe_file",
     response_model=TranscribeTextModel,
-    description="音声ファイルを受け取り, 文字起こしした文章を返す"
+    description="音声ファイルを受け取り, 文字起こしした文章を返す",
 )
-async def transcribe_file(file: UploadFile = File(...), model_name: ModelName = Form(...)):
+async def transcribe_file(
+    file: UploadFile = File(...), model_name: ModelName = Form(...)
+):
     logger.info("/transcribe_file accessed")
-    
+
     # temporary storage of received audio file
     contents = await file.read()
     temp_filepath = write_to_temporary_file(contents, Path(file.filename).suffix)
@@ -55,7 +58,7 @@ async def transcribe_file(file: UploadFile = File(...), model_name: ModelName = 
     # transcribe
     try:
         model = load_faster_whisper_model(model_name.value)
-        segments, info = model.transcribe(str(temp_filepath), beam_size=5)
+        transcribe_text = faster_whisper_transcribe(model, str(temp_filepath))
     except RuntimeError as e:
         raise HTTPException(status_code=400, detail=str(e))
     finally:
@@ -63,9 +66,6 @@ async def transcribe_file(file: UploadFile = File(...), model_name: ModelName = 
         temp_filepath.unlink()
 
     # response
-    transcribe_text = ""
-    for segment in segments:
-        transcribe_text += segment.text
     logger.info("response transcribe text")
     return TranscribeTextModel(transcribe_text=transcribe_text)
 
@@ -73,7 +73,7 @@ async def transcribe_file(file: UploadFile = File(...), model_name: ModelName = 
 @app.post(
     "/transcribe_base64",
     response_model=TranscribeTextModel,
-    description="base64形式の音声ファイルを受け取り, 文字起こしした文章を返す"
+    description="base64形式の音声ファイルを受け取り, 文字起こしした文章を返す",
 )
 async def transcribe_base64(request: WhisperRequestModel):
     logger.info("/transcribe_base64 accessed")
@@ -94,7 +94,7 @@ async def transcribe_base64(request: WhisperRequestModel):
     # transcribe
     try:
         model = load_faster_whisper_model(request.model_name)
-        segments, info = model.transcribe(str(temp_filepath), beam_size=5)
+        transcribe_text = faster_whisper_transcribe(model, str(temp_filepath))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     finally:
@@ -102,8 +102,5 @@ async def transcribe_base64(request: WhisperRequestModel):
         temp_filepath.unlink()
 
     # response
-    transcribe_text = ""
-    for segment in segments:
-        transcribe_text += segment.text
     logger.info("response transcribe text")
     return TranscribeTextModel(transcribe_text=transcribe_text)
