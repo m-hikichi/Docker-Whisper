@@ -59,7 +59,6 @@ def faster_whisper_transcribe(model: WhisperModel, audio_filepath: str) -> str:
         vad_parameters=vad_options,
     )
 
-    for segment in segments:
-        transcribe_text += segment.text
+    transcribe_text = "\n".join(segment.text for segment in segments)
 
     return transcribe_text
