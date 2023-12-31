@@ -35,3 +35,25 @@ def test_successful_request(client, model_name, transcribe_result):
 
     # THEN
     assert transcribe_result == result
+
+
+@pytest.mark.parametrize(
+    "model_name",
+    [
+        "test",
+    ]
+)
+def test_nonexistent_model_name_request(client, model_name):
+    # GIVEN
+    api_name = "/transcribe_audio_file"
+    audio_filepath = "/app/test/voicevox.wav"
+
+    # WHEN
+    result = client.predict(
+        audio_filepath,
+        model_name,
+        api_name=api_name,
+    )
+
+    # THEN
+    assert result == "Input should be 'large-v3', 'large-v2', 'large-v1', 'medium', 'small', 'base' or 'tiny'"
