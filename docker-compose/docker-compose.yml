@@ -38,11 +38,12 @@ services:
       - ../logging.conf:/app/logging.conf
     working_dir: /app
     ports:
-      - "7871:5000"
+      - "7871:7860"
     environment:
       PYTHONPATH: /app/src/
     tty: true
-    entrypoint: sh -c "cd /app/src/faster_whisper_server && uvicorn main:app --host 0.0.0.0 --reload --port 5000"
+    entrypoint: sh -c "python3 /app/src/faster_whisper_server/gradio_app.py --server_name 0.0.0.0 &\
+      cd /app/src/faster_whisper_server/ && uvicorn api:app --host 0.0.0.0 --reload --port 5000"
     deploy:
       resources:
         reservations:
