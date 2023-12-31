@@ -42,9 +42,12 @@ def transcribe_audio_file(audio_filepath: str, whisper_model_name: str) -> str:
     audio_filepath.unlink()
 
     response = requests.post(url, files=files, data=data)
-    response_dict = json.loads(response.text)
-
-    return response_dict["transcribe_text"]
+    if response.status_code == 200:
+        response_dict = json.loads(response.text)
+        return response_dict["transcribe_text"]
+    else:
+        response_dict = json.loads(response.text)
+        return response_dict["detail"][0]["msg"]
 
 
 def build_transcribe_ui() -> gr.blocks.Blocks:
