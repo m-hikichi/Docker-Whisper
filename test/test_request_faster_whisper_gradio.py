@@ -57,3 +57,26 @@ def test_nonexistent_model_name_request(client, model_name):
 
     # THEN
     assert result == "Input should be 'large-v3', 'large-v2', 'large-v1', 'medium', 'small', 'base' or 'tiny'"
+
+
+@pytest.mark.skip(reason="the test does not word, so this test is unconditionally skipped.")
+@pytest.mark.parametrize(
+    "except_audio_filepath",
+    [
+        "/app/test/test.png",
+    ]
+)
+def test_except_audio_file_request(client, except_audio_filepath):
+    # GIVEN
+    api_name = "/transcribe_audio_file"
+    model_name = "small"
+
+    # WHEN
+    result = client.predict(
+        except_audio_filepath,
+        model_name,
+        api_name=api_name,
+    )
+
+    # THEN
+    assert False
