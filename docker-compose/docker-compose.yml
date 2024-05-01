@@ -3,7 +3,7 @@ version: '3'
 services:
   openai_whisper_server:
     build:
-      context: ../Dockerfile_openai_whisper
+      context: ../Dockerfile/openai_whisper
       dockerfile: Dockerfile
     image: openai_whisper:20231117
     container_name: openai_whisper_server
@@ -13,11 +13,11 @@ services:
       - ../logging.conf:/app/logging.conf
     working_dir: /app
     ports:
-      - "7870:5000"
+      - "7860:7860"
     environment:
       PYTHONPATH: /app/src/
     tty: true
-    entrypoint: sh -c "cd /app/src/openai_whisper_server && uvicorn main:app --host 0.0.0.0 --reload --port 5000"
+    entrypoint: sh -c "cd /app/src/openai_whisper_server && python3 gradio_app.py --server_name 0.0.0.0"
     deploy:
       resources:
         reservations:
