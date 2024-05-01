@@ -1,2 +1,3 @@
 *.wav
 __pycache__
+src/openai_whisper_server/models
