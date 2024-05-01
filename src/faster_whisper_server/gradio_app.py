@@ -1,14 +1,12 @@
-import gradio as gr
 import logging.config
 import argparse
+import gradio as gr
 from pathlib import Path
 from faster_whisper_server.faster_whisper_tools import (
     ModelName,
     load_faster_whisper_model,
     faster_whisper_transcribe,
 )
-import requests
-import json
 
 
 # ロギング設定
@@ -31,23 +29,14 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def transcribe_audio_file(audio_filepath: str, whisper_model_name: str) -> str:
-    url = "http://faster_whisper_server:5000/transcribe_file"
     audio_filepath = Path(audio_filepath)
 
-    with open(audio_filepath, "rb") as f:
-        audio = f.read()
-    files = {"file" : audio}
-    data = {"model_name": whisper_model_name}
+    whisper_model = load_faster_whisper_model(whisper_model_name)
+    transcribe_text = faster_whisper_transcribe(whisper_model, str(audio_filepath))
 
     audio_filepath.unlink()
 
-    response = requests.post(url, files=files, data=data)
-    if response.status_code == 200:
-        response_dict = json.loads(response.text)
-        return response_dict["transcribe_text"]
-    else:
-        response_dict = json.loads(response.text)
-        return response_dict["detail"][0]["msg"]
+    return transcribe_text
 
 
 def build_transcribe_ui() -> gr.blocks.Blocks:

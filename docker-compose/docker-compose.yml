@@ -28,7 +28,7 @@ services:
 
   faster_whisper_server:
     build:
-      context: ../Dockerfile_faster_whisper
+      context: ../Dockerfile/faster_whisper
       dockerfile: Dockerfile
     image: faster_whisper:0.10.0
     container_name: faster_whisper_server
@@ -42,8 +42,7 @@ services:
     environment:
       PYTHONPATH: /app/src/
     tty: true
-    entrypoint: sh -c "python3 /app/src/faster_whisper_server/gradio_app.py --server_name 0.0.0.0 &\
-      cd /app/src/faster_whisper_server/ && uvicorn api:app --host 0.0.0.0 --reload --port 5000"
+    entrypoint: sh -c "python3 /app/src/faster_whisper_server/gradio_app.py --server_name 0.0.0.0"
     deploy:
       resources:
         reservations:

@@ -1,7 +1,7 @@
 import logging.config
-from enum import Enum, unique
-
 import torch
+from enum import Enum, unique
+from pathlib import Path
 from faster_whisper import WhisperModel
 from faster_whisper.vad import VadOptions
 
@@ -43,7 +43,7 @@ def load_faster_whisper_model(model_name: str) -> WhisperModel:
     except Exception as e:
         raise e
 
-    logger.info(f"load {model_name} model")
+    logger.info(f"Finish to load {model_name} model")
     return model
 
 
