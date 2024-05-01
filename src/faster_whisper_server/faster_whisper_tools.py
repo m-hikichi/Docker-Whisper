@@ -1,7 +1,6 @@
 import logging.config
 import torch
 from enum import Enum, unique
-from pathlib import Path
 from faster_whisper import WhisperModel
 from faster_whisper.vad import VadOptions
 
@@ -48,6 +47,7 @@ def load_faster_whisper_model(model_name: str) -> WhisperModel:
 
 
 def faster_whisper_transcribe(model: WhisperModel, audio_filepath: str) -> str:
+    logger.info("Start to transcribe")
     transcribe_text = ""
 
     vad_options = VadOptions(min_silence_duration_ms=1000)
@@ -61,4 +61,5 @@ def faster_whisper_transcribe(model: WhisperModel, audio_filepath: str) -> str:
 
     transcribe_text = "\n".join(segment.text for segment in segments)
 
+    logger.info("Finish to transcribe")
     return transcribe_text

@@ -8,8 +8,7 @@ services:
     image: openai_whisper:20231117
     container_name: openai_whisper_server
     volumes:
-      - ../src/utils:/app/src/utils
-      - ../src/openai_whisper_server:/app/src/openai_whisper_server
+      - ../src/openai_whisper_server:/app/src
       - ../logging.conf:/app/logging.conf
     working_dir: /app
     ports:
@@ -17,7 +16,7 @@ services:
     environment:
       PYTHONPATH: /app/src/
     tty: true
-    entrypoint: sh -c "cd /app/src/openai_whisper_server && python3 gradio_app.py --server_name 0.0.0.0"
+    entrypoint: sh -c "cd /app/src && python3 gradio_app.py --server_name 0.0.0.0"
     deploy:
       resources:
         reservations:
@@ -33,16 +32,15 @@ services:
     image: faster_whisper:0.10.0
     container_name: faster_whisper_server
     volumes:
-      - ../src/utils:/app/src/utils
-      - ../src/faster_whisper_server:/app/src/faster_whisper_server
+      - ../src/faster_whisper_server:/app/src
       - ../logging.conf:/app/logging.conf
     working_dir: /app
     ports:
-      - "7871:7860"
+      - "7861:7860"
     environment:
       PYTHONPATH: /app/src/
     tty: true
-    entrypoint: sh -c "python3 /app/src/faster_whisper_server/gradio_app.py --server_name 0.0.0.0"
+    entrypoint: sh -c "cd /app/src/ && python3 gradio_app.py --server_name 0.0.0.0"
     deploy:
       resources:
         reservations:

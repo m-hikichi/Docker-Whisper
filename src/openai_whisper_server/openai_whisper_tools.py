@@ -21,13 +21,13 @@ class ModelName(Enum):
 
 def load_openai_whisper_model(model_name: str):
     logger.info(f"Start to load OpenAI {model_name} model")
-    model_filepath = Path("/app/src/openai_whisper_server/models") / (model_name + ".pt")
+    model_filepath = Path("/app/src/models") / (model_name + ".pt")
     try:
         if torch.cuda.is_available():
             model = whisper.load_model(model_filepath, device="cuda")
         else:
             model = whisper.load_model(model_filepath, device="cpu")
-    except torch.cuda.OutOfMemoryError as e:
+    except torch.cuda.OutOfMemoryError:
         # CUDA out of memory
         model = whisper.load_model(model_filepath, device="cpu")
     except Exception as e:
