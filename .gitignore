@@ -1,3 +1,4 @@
 *.wav
 __pycache__
 src/openai_whisper_server/models
+src/kotoba_whisper_server/models
