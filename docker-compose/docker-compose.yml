@@ -49,6 +49,30 @@ services:
               count: 1
               capabilities: [gpu]
 
+  kotoba_whisper_server:
+    build:
+      context: ../Dockerfile/kotoba_whisper
+      dockerfile: Dockerfile
+    image: kotoba_whisper
+    container_name: kotoba_whisper_server
+    volumes:
+      - ../src/kotoba_whisper_server:/app/src
+      - ../logging.conf:/app/logging.conf
+    working_dir: /app
+    ports:
+      - "7862:7860"
+    environment:
+      PYTHONPATH: /app/src/
+    tty: true
+    entrypoint: sh -c "cd /app/src && python3 gradio_app.py --server_name 0.0.0.0"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
   whisper_test_client:
     image: python:3.10
     container_name: whisper_test_client
